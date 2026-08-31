@@ -1,6 +1,6 @@
 {
   "name": "elisium",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "WAF middleware for Express — rate limit, SQLi, XSS, brute force protection",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
