@@ -20,7 +20,7 @@ export function elisiumGuard(options: EliasiumOptions = {}) {
     } = options;
 
     // ── defaults ──────────────────────────────────────
-    const { whitelist = [], blacklist = [], banTime = 60 * 60 * 1000, maxStrikes = 3 } = cerberus;
+    const { whitelist = [], blacklist = [], banTime = 60 * 60 * 1000, maxStrikes = 3, trustedProxies = [] } = cerberus;
     const { windowMs = 60 * 1000, max = 100 } = caronte;
     const { xss = true, sqlInjection = true, commandInjection = true, headerInjection = true } = nemesis;
     const { slowloris = true, requestSmuggling = true, connectionTimeout = 5000, maxHeaderSize = 8192 } = hidra;

@@ -17,8 +17,9 @@ export interface EliasiumOptions {
 export interface CerberusOptions {
     whitelist?:  string[];
     blacklist?:  string[];
-    banTime?:    number;   // ms — default 1h
-    maxStrikes?: number;   // default 3
+    banTime?:    number;   
+    maxStrikes?: number; 
+    trustedProxies?: string[];  
 }
 
 // 🌊 Caronte — rate limit

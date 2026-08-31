@@ -8,10 +8,16 @@ interface ScoreResult {
 
 const BOT_UA_PATTERNS = [
     /curl/i, /wget/i, /python/i, /go-http/i,
-    /java/i, /ruby/i, /scrapy/i, /axios/i,
+    /java/i, /ruby/i, /scrapy/i,
 ];
 
 export function calcularScore(req: Request, record: IPRecord): ScoreResult {
+    // ── Whitelist localhost — sem penalidade em dev ─
+    const ipLimpo = req.socket.remoteAddress ?? '';
+    if (ipLimpo === '127.0.0.1' || ipLimpo === '::1' || ipLimpo === '::ffff:127.0.0.1') {
+        return { score: 0, motivos: [] };
+    }
+
     let score   = 0;
     const motivos: string[] = [];
     const now   = Date.now();
@@ -35,10 +41,10 @@ export function calcularScore(req: Request, record: IPRecord): ScoreResult {
 
     // ── Tamanho do payload ──────────────────────────
     const contentLength = parseInt(req.headers['content-length'] ?? '0', 10);
-    if (contentLength > 1_000_000) {       // > 1MB
+    if (contentLength > 1_000_000) {
         score += 25;
         motivos.push(`Payload gigante: ${contentLength} bytes (+25)`);
-    } else if (contentLength > 100_000) {  // > 100KB
+    } else if (contentLength > 100_000) {
         score += 10;
         motivos.push(`Payload grande: ${contentLength} bytes (+10)`);
     }

@@ -78,11 +78,15 @@ export function validarToken(token: string, fingerprint?: string): ValidationRes
 
     // ── verifica assinatura ──────────────────────────
     const expectedSig = sign(`${header}.${payload}`);
-    const validSig = crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSig),
-    );
+    // depois
+const sigBuf = Buffer.from(signature);
+const expBuf = Buffer.from(expectedSig);
 
+if (sigBuf.length !== expBuf.length) {
+    return { valid: false, motivo: 'Assinatura inválida — token adulterado' };
+}
+
+const validSig = crypto.timingSafeEqual(sigBuf, expBuf);
     if (!validSig) {
         return { valid: false, motivo: 'Assinatura inválida — token adulterado' };
     }
