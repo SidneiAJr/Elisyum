@@ -1,6 +1,34 @@
 # 🏛️ Elisium
 
-> WAF middleware for Express — rate limit, SQLi, XSS, brute force, fingerprint & JWT protection in one line.
+> Middleware de segurança para APIs Express — criado no Brasil, feito pra aguentar porrada.
+
+---
+
+## De onde surgiu a ideia?
+
+Queria proteger minhas APIs além do básico — `helmet` e `rate-limit` resolvem parte do problema, mas não chegam nem perto do suficiente quando o negócio começa a tomar pancada de verdade.
+
+O Elisium nasceu disso: um middleware único que reúne sete camadas de proteção sem precisar instalar e configurar pacotes separados pra cada ameaça.
+
+> ⚠️ O Elisium atua na **camada L7 (aplicação)**. Ele não substitui proteções de rede ou firewall — ele soma a elas. Quanto mais camadas, melhor.
+
+O nome vem do **Elísio** da mitologia grega — o paraíso dos heróis. A ideia é que sua API viva lá dentro, protegida, enquanto os guardiões barram tudo que vem de fora.
+
+---
+
+## O que ele faz?
+
+O Elisium coloca **sete guardiões** na frente da sua API. Cada um cuida de uma ameaça diferente:
+
+| Guardião | O que ele faz |
+|---|---|
+| ⚔️ **Cérbero** | O porteiro. Mantém listas de IPs permitidos, bloqueados, e bane temporariamente quem se comporta mal |
+| 🌊 **Caronte** | O controlador de fluxo. Limita quantas requisições um IP pode fazer por minuto |
+| 🛡️ **Némesis** | O detector de ataques. Analisa cada requisição procurando SQL Injection, XSS, injeção de comandos e manipulação de headers |
+| 🐍 **Hidra** | O anti-DDoS. Detecta ataques lentos (Slowloris) e tentativas de Request Smuggling |
+| 🌍 **Atlas** | O fiscal de protocolo. Pode obrigar o uso de HTTPS e penalizar conexões HTTP |
+| 🧠 **Inteligência** | O analista comportamental. Dá uma pontuação pra cada IP baseado no comportamento — IPs suspeitos são banidos automaticamente |
+| 🌙 **Morfeu** | O alertador. Te avisa quando alguém é banido, via callback, Telegram, Discord ou o que você quiser |
 
 ---
 
@@ -45,27 +73,13 @@ const server = app.listen(3000);
 aplicarTimeoutConexao(server, 5000);
 ```
 
----
-
-## Architecture
-
-Elisyum is structured as a layered defense system — each guardian handles a specific threat:
-
-| Guardian | Role |
-|---|---|
-| ⚔️ **Cérbero** | Whitelist / Blacklist / Temporary ban |
-| 🌊 **Caronte** | Rate limiting per IP |
-| 🛡️ **Némesis** | WAF — XSS, SQLi, Command injection, Header injection |
-| 🐍 **Hidra** | Slowloris & Request Smuggling detection |
-| 🌍 **Atlas** | HTTP/HTTPS enforcement |
-| 🧠 **Inteligência** | Heuristic scoring — bans suspicious behavior automatically |
-| 🌙 **Morfeu** | Callbacks & alerts on ban events |
+> ⚠️ **Importante:** sempre coloque o `elisiumGuard` **antes** das suas rotas. E sempre use `aplicarTimeoutConexao` junto com o server — sem isso a proteção contra Slowloris não funciona.
 
 ---
 
-## Route-level Protection
+## Proteção por rota
 
-Add fingerprint + method validation to specific routes:
+Precisa de proteção extra em rotas sensíveis como login ou pagamento? Use o middleware de rota:
 
 ```typescript
 import { elisium, authMiddleware } from 'elisium';
@@ -92,14 +106,12 @@ O Elisium tem seu próprio sistema de JWT, mais seguro que os padrões comuns po
 ```typescript
 import { gerarToken, validarToken } from 'elisium/utils/jwt';
 
-// Generate
 const token = gerarToken('user-123', requestHash, {
-  expiresIn:   60 * 60 * 1000,        // expira em 1 hora
-  fingerprint: req.elisiumFingerprint, // vincula ao cliente
-  claims: { role: 'admin' },           // dados extras
+  expiresIn:   60 * 60 * 1000,
+  fingerprint: req.elisiumFingerprint,
+  claims: { role: 'admin' },
 });
 
-// Validate
 const result = validarToken(token, fingerprint);
 if (result.valid) {
   console.log(result.payload.sub); // 'user-123'
@@ -110,41 +122,36 @@ Se alguém roubar o token e tentar usar em outro dispositivo, o fingerprint não
 
 ---
 
-## Token Vault
+## Sistema de pontuação (Inteligência)
 
-Internal rotating HMAC key store — zero configuration, zero exposure:
+O guardião Inteligência analisa o comportamento de cada IP e dá uma nota de 0 a 100. Se passar do limite configurado, o IP é banido automaticamente:
 
-```typescript
-import { vault } from 'elisyum/core/vault';
+| Sinal detectado | Pontuação |
+|---|---|
+| Sem User-Agent | +20 |
+| User-Agent de bot conhecido | +15 |
+| Sem Accept-Language | +15 |
+| Payload maior que 1MB | +25 |
+| Payload maior que 100KB | +10 |
+| Requisições com menos de 100ms entre si | +25 |
+| Requisições com menos de 500ms entre si | +10 |
+| Horário suspeito (0h–5h) com alto volume | +20 |
+| Conexão HTTP em vez de HTTPS | +5 |
 
-const signature = vault.assinar('sensitive-data');
-const valid     = await vault.validar('sensitive-data', signature);
-
-console.log(vault.estado);
-console.log(vault.metricas);
-```
-
-**Features:**
-- HKDF + PBKDF2 key derivation on boot
-- 3-layer key rotation (current + 2 reserves)
-- Timing-safe comparison with random delay
-- Auto-rotation by time (30min) or usage (10k signatures)
-- Anti-debug detection
-- Secure destruction on shutdown
+> IPs locais (`127.0.0.1`, `::1`) nunca recebem pontuação — você não vai se banir em desenvolvimento.
 
 ---
 
-## Configuration
-
-### `elisiumGuard(options)`
+## Configuração completa
 
 ```typescript
 elisiumGuard({
   cerberus: {
-    whitelist:  string[];
-    blacklist:  string[];
-    banTime:    number;
-    maxStrikes: number;
+    whitelist:      ['10.0.0.1'],   // IPs que nunca são bloqueados
+    blacklist:      ['1.2.3.4'],    // IPs sempre bloqueados
+    banTime:        60 * 60 * 1000, // tempo de ban em ms (padrão: 1 hora)
+    maxStrikes:     3,              // strikes antes do ban (padrão: 3)
+    trustedProxies: ['10.0.0.2'],  // IPs de proxy confiável (nginx, load balancer)
   },
 
   caronte: {
@@ -153,87 +160,75 @@ elisiumGuard({
   },
 
   nemesis: {
-    xss:              boolean;
-    sqlInjection:     boolean;
-    commandInjection: boolean;
-    headerInjection:  boolean;
+    xss:              true,
+    sqlInjection:     true,
+    commandInjection: true,
+    headerInjection:  true,
   },
 
   hidra: {
-    slowloris:         boolean;
-    requestSmuggling:  boolean;
-    connectionTimeout: number;
-    maxHeaderSize:     number;
+    slowloris:         true,
+    requestSmuggling:  true,
+    connectionTimeout: 5000,
+    maxHeaderSize:     8192,
   },
 
   atlas: {
-    httpsOnly:    boolean;
-    penalizeHttp: boolean;
+    httpsOnly:    false,
+    penalizeHttp: true,
   },
 
   inteligencia: {
-    enabled:           boolean;
-    banScoreThreshold: number;
+    enabled:           true,
+    banScoreThreshold: 80,
   },
 
   morfeu: {
-    onBan?: (ip: string, motivo: string, hash: string) => void;
-  }
-}
-```
-
-### `elisium(options)` — route middleware
-
-```typescript
-{
-  metodos?:       ('GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH')[];
-  ttl?:           number;
-  maxUsos?:       number;
-  bloquearTroca?: boolean;
-}
+    onBan: (ip, motivo, hash) => {
+      console.log(`IP banido: ${ip} — ${motivo}`);
+      // Telegram, Discord, webhook, etc.
+    },
+  },
+})
 ```
 
 ---
 
-## Scoring
+## Logs
 
-| Signal | Score |
-|---|---|
-| Missing User-Agent | +20 |
-| Bot User-Agent | +15 |
-| Missing Accept-Language | +15 |
-| Payload > 1MB | +25 |
-| Payload > 100KB | +10 |
-| Requests < 100ms apart | +25 |
-| Requests < 500ms apart | +10 |
-| Suspicious hours + high volume | +20 |
-| HTTP instead of HTTPS | +5 |
-
-Score >= threshold → automatic ban.
-
----
-
-## Logging
+O Elisium registra tudo em `logs/elisium/YYYY-MM-DD.json` e no console:
 
 ```
-✨ [2026-08-16 17:45:28] [MEFISTÓFELES] {hash} 127.0.0.1 — guided to Elísio
-🚫 [2026-08-16 17:45:28] [NÉMESIS] {hash} 192.168.0.1 — XSS detected
-⚔️  [2026-08-16 17:45:28] [CARONTE] {hash} 10.0.0.1 — banned
+📜 [2026-08-31 01:10:00] [MEFISTÓFELES] {hash} 192.168.0.1 — este viajante bate à porta do Elísio
+✨ [2026-08-31 01:10:00] [MEFISTÓFELES] {hash} 192.168.0.1 — guiado ao Elísio
+🚫 [2026-08-31 01:10:01] [NÉMESIS] {hash} 192.168.0.2 — XSS detectado em body/query
+⚔️  [2026-08-31 01:10:02] [CARONTE] {hash} 192.168.0.3 — banido por rate limit
+⚠️  [2026-08-31 01:10:03] [INTELIGÊNCIA] {hash} 192.168.0.4 — score 65/100
 ```
 
----
-
-## Security Design
-
-- Zero configuration secrets — keys derived on boot via HKDF + PBKDF2
-- Timing-safe comparisons everywhere
-- Fingerprint binding — JWTs tied to client context
-- Prototype freezing — anti-tamper on core classes
-- Anti-debug mode — detects --inspect
-- Secure destruction — keys overwritten before zeroing on shutdown
+**Mefistófeles** é o logger interno — registra a chegada e saída de cada requisição, e delega os bloqueios para o guardião responsável.
 
 ---
 
-## License
+## Limitações conhecidas
 
-MIT
+- **Armazenamento em memória** — IPs banidos e contadores vivem na memória do processo. Se reiniciar, tudo zera. Não funciona em múltiplas instâncias (cluster, kubernetes). Suporte a Redis está planejado.
+- **Fingerprint pode ser agressivo** — em redes corporativas com proxy compartilhado, pode bloquear usuários legítimos. Use `bloquearTroca: false` nesses casos.
+- **Score heurístico pode dar falso positivo** — ferramentas como Postman e alguns SDKs não enviam `User-Agent` padrão. Configure `banScoreThreshold` alto (90+) ou desative a Inteligência em rotas internas.
+- **Sem suporte completo a IPv6** — alguns cenários com proxies e IPv6 podem retornar o IP errado.
+- **Logs síncronos** — o `appendFileSync` pode ser gargalo em carga muito alta. Considere desativar logs em arquivo nesses casos.
+- **Em desenvolvimento ativo** — API pode mudar entre versões. Pin na versão que usar.
+
+---
+
+## Avisos de segurança
+
+> 🔐 O Elisium adiciona proteção mas não substitui boas práticas — valide e sanitize seus dados, implemente autenticação adequada e mantenha dependências atualizadas.
+
+> 🌐 Se tiver nginx ou load balancer na frente, configure `trustedProxies` com o IP do proxy. Sem isso, o IP detectado será sempre o do proxy, não o do cliente real.
+
+> 🧪 Rode `npm audit` periodicamente para verificar vulnerabilidades nas dependências.
+
+---
+
+Made with ❤️ by Albertão 🇧🇷
