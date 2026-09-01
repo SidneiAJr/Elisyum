@@ -8,12 +8,12 @@ const SQL_PATTERNS = [
 ];
 
 const XSS_PATTERNS = [
-    /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
-    /javascript:/gi,
+    /<script[\s\S]*?>[\s\S]*?<\/\s*script\s*>/gi,  // ← fix aqui
+    /javascript\s*:/gi,                              // pega "javascript :" com espaço
     /on\w+\s*=/gi,
-    /<iframe/gi,
-    /data:text\/html/gi,
-    /vbscript:/gi,
+    /<\s*iframe/gi,                                  // pega "< iframe" com espaço
+    /data\s*:\s*text\/html/gi,                       // pega variações com espaço
+    /vbscript\s*:/gi,
 ];
 
 const CMD_PATTERNS = [
