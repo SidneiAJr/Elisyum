@@ -1,6 +1,30 @@
-# 🏛️ Elisium
+> [!WARNING]
+> ## ⚠️ ATENÇÃO — VERSÃO EM FASE DE TESTES (`0.0.1a`)
+>
+> O **Elisium** ainda **não está pronto para produção**.
+>
+> Esta versão passou por testes iniciais de unidade, integração e carga, mas ainda precisa de validação mais aprofundada antes de ser considerada segura para ambientes reais.
+>
+> **O que ainda precisa ser testado e resolvido:**
+>
+> - 🔴 Sem suporte a múltiplas instâncias — estado em memória não sincroniza entre processos
+> - 🔴 Sem persistência de banimentos — reiniciou, zerou
+> - 🔴 Suporte a IPv6 incompleto em cenários com proxy
+> - 🟡 Fingerprint pode bloquear usuários legítimos em redes com proxy compartilhado
+> - 🟡 Sistema de scoring heurístico — falsos positivos possíveis
+> - 🟡 Logs síncronos — pode ser gargalo sob carga alta
+> - 🟡 Testes de ban por strikes consecutivos não automatizados
+> - 🟡 Vault não testado sob alta carga de assinaturas
+> - 🟡 API pode mudar sem aviso entre versões — sempre pin na versão que usar
+>
+> **Use apenas para estudo, testes e desenvolvimento local.**
+> Aguarde uma versão estável antes de considerar qualquer uso em produção.
 
-> Middleware de segurança para APIs Express — criado no Brasil, feito pra aguentar porrada.
+
+# 🏛️ Elisium | Versão Alpha(0.0.1a)
+
+> Middleware de segurança para APIs Express — criado no Brasil, feito pra aguentar porrada
+
 
 ---
 
