@@ -8,12 +8,12 @@ const SQL_PATTERNS = [
 ];
 
 const XSS_PATTERNS = [
-    /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
-    /javascript:/gi,
+    /<script\b[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi,  // único padrão robusto
+    /javascript\s*:/gi,
     /on\w+\s*=/gi,
-    /<iframe/gi,
-    /data:text\/html/gi,
-    /vbscript:/gi,
+    /<\s*iframe/gi,
+    /data\s*:\s*text\/html/gi,
+    /vbscript\s*:/gi,
 ];
 
 const CMD_PATTERNS = [
