@@ -51,7 +51,7 @@ HKDF (HMAC-based Key Derivation Function)
 É uma função padrão criptográfico pra derivar chaves a partir de um material de entropia. Usado no TLS 1.3. Basicamente pega uma "semente" aleatória e transforma num material de chave seguro e bem distribuído.
 
 PBKDF2 (Password-Based Key Derivation Function 2)
-Função de derivação de chave projetada pra ser lenta de propósito. Ela repete o processo de hash N vezes (no Elisium: 100.000 iterações). Isso torna força bruta computacionalmente inviável — mesmo que o atacante descubra o input, recalcular leva tempo demais.
+Função de derivação de chave projetada pra ser lenta de propósito. Ela repete o processo de hash N vezes. Isso torna força bruta computacionalmente inviável — mesmo que o atacante descubra o input, recalcular leva tempo demais.
 
 
 As chaves do Vault nunca são hardcoded no código ou no `.env`. Elas são **derivadas no boot** a partir de entropia aleatória.
@@ -62,7 +62,7 @@ O processo:
 2. `process.hrtime.bigint()` — timestamp de alta resolução em nanosegundos (único por boot)
 3. Mais `randomBytes` pra misturar
 4. Tudo isso passa pelo **HKDF** (Key Derivation Function baseada em HMAC) — padrão criptográfico usado no TLS 1.3
-5. O resultado passa pelo **PBKDF2** com 100.000 iterações — torna força bruta computacionalmente inviável
+5. O resultado passa pelo **PBKDF2** 
 
 Por que isso importa? Porque mesmo que alguém acesse o servidor e leia a memória, as chaves geradas são diferentes a cada boot. Não tem como reproduzir ou prever.
 
