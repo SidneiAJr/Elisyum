@@ -1,25 +1,43 @@
 > [!WARNING]
 > ## ⚠️ ATENÇÃO — VERSÃO EM FASE DE TESTES (`0.0.1a`)
 >
-> O **Elisium** ainda **não está pronto para produção**.
+> O **Elisium** ainda **não está pronto para produção** e **não está publicado no npm**.
 >
 > Esta versão passou por testes iniciais de unidade, integração e carga, mas ainda precisa de validação mais aprofundada antes de ser considerada segura para ambientes reais.
 >
-> **O que ainda precisa ser testado e resolvido:**
+> **🚫 Disponibilidade**
 >
-> - 🔴 Sem suporte a múltiplas instâncias — estado em memória não sincroniza entre processos
-> - 🔴 Sem persistência de banimentos — reiniciou, zerou
-> - 🔴 Suporte a IPv6 incompleto em cenários com proxy
+> - ❌ Não publicado no npm — não tente instalar via `npm install elisium`, não vai funcionar
+> - ❌ Sem versão estável disponível publicamente
+> - ❌ A API pode mudar sem aviso entre versões — nunca use sem fixar a versão exata
+> - ⚠️ Use apenas clonando o repositório diretamente para fins de estudo e teste local
+>
+> **🔴 Limitações críticas (bloqueiam uso em produção)**
+>
+> - 🔴 Sem suporte a múltiplas instâncias — estado em memória não sincroniza entre processos (sem Redis ainda)
+> - 🔴 Sem persistência de banimentos — reiniciou o servidor, todos os banimentos são perdidos
+> - 🔴 Suporte a IPv6 incompleto em cenários com proxy reverso
+> - 🔴 Sem testes de carga no Vault — comportamento sob alta concorrência de assinaturas é desconhecido
+>
+> **🟡 Limitações conhecidas (podem causar comportamento inesperado)**
+>
 > - 🟡 Fingerprint pode bloquear usuários legítimos em redes com proxy compartilhado
-> - 🟡 Sistema de scoring heurístico — falsos positivos possíveis
-> - 🟡 Logs síncronos — pode ser gargalo sob carga alta
-> - 🟡 Testes de ban por strikes consecutivos não automatizados
-> - 🟡 Vault não testado sob alta carga de assinaturas
-> - 🟡 API pode mudar sem aviso entre versões — sempre pin na versão que usar
+> - 🟡 Sistema de scoring heurístico — falsos positivos são possíveis dependendo do contexto
+> - 🟡 Logs síncronos — pode ser gargalo sob carga alta (logs assíncronos estão planejados)
+> - 🟡 Testes de ban por strikes consecutivos ainda não automatizados
+> - 🟡 Sem dashboard de monitoramento — visibilidade limitada em tempo real
+> - 🟡 Sem suporte a Redis — banimentos e contadores não sobrevivem a reinicializações ou múltiplos processos
+> - 🟡 Proteção limitada a camada L7 — ataques volumétricos em L3/L4 não são barrados
+>
+> **🟢 O que já foi testado e funciona**
+>
+> - ✅ 36 testes unitários e de integração passando (JWT, Vault, Fingerprint, MemoryStore)
+> - ✅ Testes de carga com k6 — rate limit, SQL Injection e carga normal responderam conforme esperado
+> - ✅ Alerta CodeQL corrigido — regex XSS atualizada e aprovada pela análise estática
 >
 > **Use apenas para estudo, testes e desenvolvimento local.**
 > Aguarde uma versão estável antes de considerar qualquer uso em produção.
-
+> Acompanhe o progresso do projeto pelo repositório.
 
 # 🏛️ Elisium | Versão Alpha(0.0.1a)
 
