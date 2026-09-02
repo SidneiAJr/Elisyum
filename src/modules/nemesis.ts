@@ -8,11 +8,11 @@ const SQL_PATTERNS = [
 ];
 
 const XSS_PATTERNS = [
-    /<script[\s\S]*?>[\s\S]*?<\/\s*script\s*>/gi,  // ← fix aqui
-    /javascript\s*:/gi,                              // pega "javascript :" com espaço
+    /<script\b[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi,  // único padrão robusto
+    /javascript\s*:/gi,
     /on\w+\s*=/gi,
-    /<\s*iframe/gi,                                  // pega "< iframe" com espaço
-    /data\s*:\s*text\/html/gi,                       // pega variações com espaço
+    /<\s*iframe/gi,
+    /data\s*:\s*text\/html/gi,
     /vbscript\s*:/gi,
 ];
 
