@@ -74,16 +74,6 @@ O Elisium coloca **sete guardiões** na frente da sua API. Cada um cuida de uma 
 
 ---
 
-## Instalação
-
-```bash
-npm install elisium
-```
-
-Requisito: Node.js 18+ e Express 4+.
-
----
-
 ## Uso básico
 
 Três linhas e sua API já tá protegida:
